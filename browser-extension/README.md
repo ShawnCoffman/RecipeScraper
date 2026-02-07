@@ -21,9 +21,7 @@ A Chrome/Edge browser extension that extracts recipes from cooking websites with
 4. Select the `browser-extension` folder
 5. The Recipe Scraper icon should now appear in your extensions toolbar
 
-### Firefox (Coming Soon)
-
-Firefox support requires a few manifest adjustments. Let me know if you need it!
+### Firefox - No plans
 
 ## How to Use
 
