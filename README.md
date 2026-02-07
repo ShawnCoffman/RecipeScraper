@@ -27,7 +27,3 @@ Quick start — load the extension locally:
 4. The Recipe Scraper icon should appear in your extensions toolbar.
 
 Use the extension by opening any recipe page and clicking the Recipe Scraper icon, then choose "Extract Recipe" in the popup.
-
-If you still need the legacy Python scraper or have scripts that depend on it, check the repository history or open an issue — the old CLI may be available in a previous commit or a `legacy/` branch.
-
-If you'd like, I can also update any other docs or badges to reflect this change.
