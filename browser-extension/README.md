@@ -62,16 +62,6 @@ The extension:
 - If extraction fails, try refreshing the page
 - Some sites with heavy JavaScript may take a moment to load
 
-## Comparison with Python Version
-
-| Feature | Python Script | Browser Extension |
-|---------|--------------|-------------------|
-| Installation | Requires Python + packages | Just load in browser |
-| Usage | Command line | Click extension icon |
-| Cloudflare bypass | Uses cloudscraper | Not needed (browser context) |
-| Works on | Any URL | Current browser tab only |
-| Speed | Needs to fetch page | Instant (page already loaded) |
-
 ## Troubleshooting
 
 **"No recipe found on this page"**
