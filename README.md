@@ -10,89 +10,24 @@ Tired of scrolling through endless backstories about someone's grandmother's sec
 - 🔍 Uses Schema.org markup for accurate extraction
 - 🔄 Fallback method for sites without proper markup
 
-## Installation
 
-1. Install Python dependencies:
-```bash
-pip install -r requirements.txt
-```
+# Recipe Scraper — Chrome/Edge Extension 🍳
 
-**Note:** The scraper uses `cloudscraper` to bypass Cloudflare protection on sites that block automated requests. This is automatically handled - no configuration needed!
+This repository now provides a Chrome/Edge browser extension that extracts recipes directly from pages you visit in your browser. The previous Python command-line scraper is no longer the primary interface — the extension replaces that workflow.
 
-## Usage
+For full usage, installation, and development details, see the extension README:
 
-### Basic Usage
-```bash
-python recipe_scraper.py <recipe_url>
-```
+- [browser-extension/README.md](browser-extension/README.md)
 
-### Save Directly to File
-```bash
-python recipe_scraper.py <recipe_url> output_file.txt
-```
+Quick start — load the extension locally:
 
-### Examples
-```bash
-# Display recipe in terminal
-python recipe_scraper.py https://www.allrecipes.com/recipe/10813/best-chocolate-chip-cookies/
+1. Open `chrome://extensions/` (or `edge://extensions/`) in your browser.
+2. Enable "Developer mode" in the top-right corner.
+3. Click "Load unpacked" and select the `browser-extension` folder from this repo.
+4. The Recipe Scraper icon should appear in your extensions toolbar.
 
-# Save to file
-python recipe_scraper.py https://www.foodnetwork.com/recipes/alton-brown/chewy-chocolate-chip-cookies-recipe-1953702 cookies.txt
-```
+Use the extension by opening any recipe page and clicking the Recipe Scraper icon, then choose "Extract Recipe" in the popup.
 
-## How It Works
+If you still need the legacy Python scraper or have scripts that depend on it, check the repository history or open an issue — the old CLI may be available in a previous commit or a `legacy/` branch.
 
-The scraper works by:
-1. Fetching the webpage
-2. Looking for structured recipe data (JSON-LD Schema.org markup) - most modern recipe sites use this
-3. If no structured data is found, it falls back to parsing common HTML patterns
-4. Formatting and displaying the recipe in a clean, readable format
-
-## Supported Sites
-
-Works best with sites that use Schema.org Recipe markup, including:
-- AllRecipes
-- Food Network
-- Serious Eats
-- Bon Appétit
-- Tasty
-- Most major recipe blogs
-
-## Tips
-
-- The scraper works best on dedicated recipe pages
-- Some sites may block automated requests - the tool uses standard headers to avoid this
-- If a site doesn't work, it likely uses non-standard markup or heavy JavaScript rendering
-
-## Example Output
-
-```
-================================================================================
-RECIPE: Best Chocolate Chip Cookies
-================================================================================
-
-Prep Time: PT15M
-Cook Time: PT10M
-Servings: 24 cookies
-
---------------------------------------------------------------------------------
-INGREDIENTS:
---------------------------------------------------------------------------------
-1. 2 cups all-purpose flour
-2. 1 teaspoon baking soda
-3. 1/2 teaspoon salt
-...
-
---------------------------------------------------------------------------------
-INSTRUCTIONS:
---------------------------------------------------------------------------------
-
-1. Preheat oven to 375 degrees F.
-2. Combine flour, baking soda, and salt in a bowl.
-3. Beat butter, sugar, and brown sugar until creamy.
-...
-```
-
-## License
-
-Free to use. Scrape responsibly and respect website terms of service.
+If you'd like, I can also update any other docs or badges to reflect this change.
