@@ -28,7 +28,7 @@ Before publishing, you need:
 - These appear in the Chrome Web Store listing
 
 #### 3. Extension Icon
-- ✅ Already done! (icon16.png, icon48.png, icon128.png)
+- ✅ Already done! (icon16.png, icon48.png, icon128.png, exported from icon.svg and icon16.svg)
 
 ### Publishing Steps
 
@@ -157,7 +157,7 @@ If you want a dedicated Edge listing:
 
 When you make improvements:
 
-1. Update the `version` in manifest.json (e.g., 2.1.0 → 2.1.1)
+1. Update the `version` in manifest.json (e.g., 2.1.1 → 2.1.2)
 2. Create a new zip file
 3. Upload to the Developer Dashboard
 4. Add release notes describing changes

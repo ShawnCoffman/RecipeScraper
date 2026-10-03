@@ -39,13 +39,15 @@ RecipeScraper/
     ├── icon16.png              # Toolbar icon
     ├── icon48.png              # Extensions page icon
     ├── icon128.png             # Store/install icon
+    ├── icon.svg                # Icon source for icon48/icon128 (not shipped)
+    ├── icon16.svg              # Pixel-aligned source for icon16 (not shipped)
     ├── PUBLISHING.md           # Chrome Web Store packaging and publishing notes
     └── README.md               # Extension usage and troubleshooting
 ```
 
 ## Configuration
 
-The extension uses Manifest V3 (`browser-extension/manifest.json`, version 2.1.0):
+The extension uses Manifest V3 (`browser-extension/manifest.json`, version 2.1.1):
 
 | Setting | Value |
 | --- | --- |

@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">
+  <!-- Source for icon16.png: simplified and snapped to the pixel grid so it stays crisp. -->
+  <ellipse cx="8" cy="9.5" rx="7" ry="6" fill="#D9442B"/>
+  <rect x="4" y="8" width="7" height="1" fill="#FAF9F5"/>
+  <rect x="4" y="11" width="5" height="1" fill="#FAF9F5"/>
+  <path d="M8 1v3M5 3.5h6M8 4l-2 1.5M8 4l2 1.5" stroke="#4D7C2A" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+</svg>
