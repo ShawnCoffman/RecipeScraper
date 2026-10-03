@@ -157,7 +157,7 @@ If you want a dedicated Edge listing:
 
 When you make improvements:
 
-1. Update the `version` in manifest.json (e.g., 2.0.1 → 2.0.2)
+1. Update the `version` in manifest.json (e.g., 2.1.0 → 2.1.1)
 2. Create a new zip file
 3. Upload to the Developer Dashboard
 4. Add release notes describing changes

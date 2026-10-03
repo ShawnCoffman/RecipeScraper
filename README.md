@@ -45,7 +45,7 @@ RecipeScraper/
 
 ## Configuration
 
-The extension uses Manifest V3 (`browser-extension/manifest.json`, version 2.0.1):
+The extension uses Manifest V3 (`browser-extension/manifest.json`, version 2.1.0):
 
 | Setting | Value |
 | --- | --- |
