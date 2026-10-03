@@ -1,15 +1,17 @@
-# Recipe Scraper Browser Extension 🍳
+# Recipe Scraper Browser Extension 🍅
 
 A Chrome/Edge browser extension that extracts recipes from cooking websites without all the life stories and ads. Just click the extension icon on any recipe page!
 
 ## Features
 
 ✅ **Automatic Extraction** - The recipe is extracted as soon as you open the popup  
-✅ **Clean Format** - Title, author, source link, ingredients, numbered instructions, prep/cook/total times, and servings  
-✅ **Scale Recipes** - Half, Double or Triple, with original and scaled amounts side by side  
+✅ **Recipe Card** - Title, servings, time and source link, then ingredients and numbered steps  
+✅ **Check Off Ingredients** - Tick them off as you cook; ticks stay when you change the size  
+✅ **Scale Recipes** - ½×, 2× or 3×, with the original amount shown under each scaled one  
 ✅ **Recipe Picker** - If a page has more than one recipe, choose the one you want  
-✅ **Copy** - Instantly copy the recipe (at the size you picked)  
-✅ **Save .txt** - Saves to your downloads folder and tells you exactly where
+✅ **Copy** - Copy the recipe as plain text (at the size you picked), including author, description and prep/cook times  
+✅ **Save .txt** - Saves to your downloads folder and tells you exactly where  
+✅ **Light and Dark** - Follows your system theme  
 ✅ **Works on Most Recipe Sites** - Reads Schema.org Recipe markup, with a fallback for pages without it  
 ✅ **No Server Needed** - All processing happens in your browser  
 
@@ -37,14 +39,15 @@ Firefox is not supported and there are no plans to add it.
 
 ### About scaling
 
-- Only the leading quantity of each ingredient changes: `1 (14 oz) can tomatoes` doubles to `2 (14 oz) can tomatoes`. Mixed numbers, fractions (`1/2`, `½`, `2½`) and ranges (`2-3`) are supported.
+- Only the leading quantity of each ingredient changes: `1 (14 oz) can tomatoes` doubles to `2 (14 oz) can tomatoes`. Mixed numbers (`1 1/2`, and `1-1/2` as US sites often write it), fractions (`1/2`, `½`, `2½`) and ranges (`2-3`, `1 to 2`) are supported.
+- Servings scale too, including ranges: `4-6 servings` doubles to `8-12 servings`.
 - Eggs round to whole or half amounts, with a note when you land on a half.
 - Lines like "salt to taste" are left alone and flagged.
 - Instructions are never changed. Cooking times, pan sizes and seasoning don't always scale with quantity, so check them when you scale up or down.
 
 ## Supported Sites
 
-Works on any site that publishes Schema.org Recipe markup (JSON-LD), which covers most major recipe sites and food blogs, including WordPress recipe plugins that use `@graph`.
+Works on any site that publishes Schema.org Recipe markup (JSON-LD), which covers most major recipe sites and food blogs. That includes WordPress recipe plugins that use `@graph`, pages that nest the recipe under `mainEntity`, and recipe lists (`ItemList`).
 
 For pages without that markup, a fallback parser looks for an ingredient list (an element whose class contains "ingredient") and an instructions list (class names such as "instructions", "directions", "method" or "steps"). A page only counts as a recipe if it has at least 3 ingredients and 2 instruction steps.
 
@@ -52,7 +55,7 @@ For pages without that markup, a fallback parser looks for an ingredient list (a
 
 When the popup opens (or you click ↻), the extension:
 1. Injects `recipe.js` into the current tab, on demand. Nothing runs on a page until you open the popup.
-2. Collects the Schema.org Recipe data from the page, including `@graph` and array structures, or falls back to HTML parsing
+2. Collects the Schema.org Recipe data from anywhere in the page's JSON-LD (`@graph`, arrays, `mainEntity`, lists), or falls back to HTML parsing
 3. Returns the raw recipe data to the popup, which shows it as a recipe card and applies any scaling. Copy and Save use a plain-text version (HTML tags stripped, entities decoded, ISO durations such as `PT1H30M` shown as "1 hour 30 minutes")
 
 ## Privacy
@@ -64,7 +67,7 @@ When the popup opens (or you click ↻), the extension:
 
 ## Troubleshooting
 
-**"No recipe found on this page"**
+**"No recipe on this page"**
 - Make sure you're on an actual recipe page, not a search or category page
 - The site might not use standard recipe markup
 - Try refreshing the page and clicking ↻ in the popup
@@ -72,10 +75,14 @@ When the popup opens (or you click ↻), the extension:
 **"Can't read this page"**
 - Browsers don't let extensions run on pages like `chrome://` settings, the Chrome Web Store, or the built-in PDF viewer. Open a recipe on a regular website.
 
+**Where did my .txt go?**
+- After saving, the popup shows the full path and a **Show in folder** button.
+- Files go to Chrome's download location (Settings → Downloads), which is your `Downloads` folder unless you've changed it. If a file with the same name exists, Chrome adds ` (1)`.
+
 **Extension doesn't appear**
 - Make sure Developer mode is enabled
 - Try reloading the extension
-- Check the browser console for errors
+- To see errors, right-click inside the open popup and choose **Inspect**, then open the Console tab
 
 ## Development
 

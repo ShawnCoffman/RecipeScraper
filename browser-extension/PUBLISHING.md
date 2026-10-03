@@ -72,20 +72,22 @@ Tired of scrolling through endless blog posts to find the recipe? Recipe Scraper
 what you need - ingredients, instructions, and cooking times - no ads, no life stories, just the recipe!
 
 Features:
-• Automatic recipe extraction
-• Clean, formatted output
-• Scale a recipe to half, double or triple
-• Copy to clipboard
-• Download as text file
+• Opens straight to the recipe - title, servings, time and a link back to the source
+• Tick off ingredients as you cook
+• Scale to ½×, 2× or 3×, with the original amount shown under each new one
+• Handles fractions, ranges and eggs sensibly ("1-1/2 cups" doubles to "3 cups")
+• Copy the recipe as clean text
+• Save it as a .txt file in your Downloads folder - the popup shows exactly where
+• Light and dark themes that follow your system
 • Works on most recipe sites
 • No tracking or data collection
 • Completely free
 
 How to Use:
-1. Navigate to any recipe website
-2. Click the Recipe Scraper icon - the recipe is extracted automatically
-3. Optionally pick Half, Double or Triple
-4. Copy or download - done!
+1. Open any recipe page
+2. Click the Recipe Scraper icon - the recipe appears automatically
+3. Optionally pick ½×, 2× or 3× and tick off ingredients as you go
+4. Copy it, or save it as a .txt file
 
 Works on sites that publish Schema.org recipe markup (most major recipe sites and food blogs),
 with a fallback for pages that don't.
@@ -93,19 +95,43 @@ with a fallback for pages that don't.
 Privacy: All processing happens locally in your browser. No data is collected or sent anywhere.
 ```
 
-**Category:** Productivity or Fun
+**Category:** Pick the closest match in the dashboard's list, such as Lifestyle → Household or Productivity → Tools.
 
 **Language:** English
 
-**Privacy Policy:** Since you're not collecting any data, you can use this simple statement:
-```
-Recipe Scraper does not collect, store, or transmit any user data. All recipe extraction 
-happens locally in your browser. No analytics, no tracking, no data collection of any kind.
-```
+**Support URL:** https://github.com/ShawnCoffman/RecipeScraper/issues
 
 5. Upload your screenshots
 6. Set pricing to **Free**
 7. Select regions (Worldwide recommended)
+
+#### Privacy Practices Tab
+
+The dashboard won't let you submit until this tab is filled in, and vague answers are a common reason for rejection.
+
+**Single purpose:**
+```
+Shows the recipe from the current web page as a clean card (ingredients and steps only),
+so it can be scaled, copied or saved as a text file.
+```
+
+**Permission justifications:**
+
+| Permission | Justification |
+| --- | --- |
+| `activeTab` | Reads the recipe from the tab the user is on, only after they click the extension icon. |
+| `scripting` | Runs the recipe extraction script in that tab, on demand. Nothing is injected into pages automatically. |
+| `downloads` | Saves the recipe as a .txt file to the user's Downloads folder when they click Save .txt, then shows where it was saved and opens that folder on request. |
+
+**Remote code:** No. All JavaScript is included in the package.
+
+**Data usage:** Don't tick any data types. The extension doesn't collect or transmit user data. Tick all three certifications (no selling, no unrelated use, no creditworthiness use).
+
+**Privacy policy** (paste into the field, or host it and link to it):
+```
+Recipe Scraper does not collect, store, or transmit any user data. All recipe extraction
+happens locally in your browser. No analytics, no tracking, no data collection of any kind.
+```
 
 #### Step 4: Submit for Review
 
@@ -116,7 +142,7 @@ happens locally in your browser. No analytics, no tracking, no data collection o
 ### After Approval
 
 Once approved, your extension will be available at:
-- **Chrome Web Store**: `chrome.google.com/webstore/detail/your-extension-id`
+- **Chrome Web Store**: `chromewebstore.google.com/detail/recipe-scraper/your-extension-id`
 - **Edge Add-ons** (optional): Can also submit directly to Microsoft Edge Add-ons
 - **Vivaldi**: Uses Chrome Web Store automatically
 
@@ -138,8 +164,9 @@ If you want a dedicated Edge listing:
 
 ### Good Screenshots
 1. Use the extension on a popular recipe site like AllRecipes
-2. Show the clean output vs the cluttered original page
-3. Highlight key features (Copy, Download buttons)
+2. Show the clean recipe card next to the cluttered original page
+3. Highlight key features: scaling with the original amounts, ticked-off ingredients, Copy and Save .txt
+4. The popup is 400px wide, so place it on a 1280x800 canvas rather than stretching it; one light and one dark shot works well
 
 ### Description Tips
 - Focus on the problem it solves (no more life stories!)
@@ -150,8 +177,8 @@ If you want a dedicated Edge listing:
 ### After Publishing
 - Share on social media
 - Post in relevant subreddits (r/Cooking, r/recipes)
-- Ask friends to leave positive reviews
-- Respond to user feedback
+- Respond to user feedback and reviews
+- Don't ask for or trade positive reviews; the store's policies treat that as rating manipulation
 
 ## Version Updates
 
@@ -165,8 +192,6 @@ When you make improvements:
 
 ## Support & Maintenance
 
-Consider adding:
-- A support email in the listing
-- A GitHub repository for issues/feature requests
-- A simple website with FAQs
+- Issues and feature requests: [GitHub issues](https://github.com/ShawnCoffman/RecipeScraper/issues), also used as the listing's support URL
+- Consider adding a support email to the listing
 

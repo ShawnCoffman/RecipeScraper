@@ -1,15 +1,17 @@
-# Recipe Scraper 🍳
+# Recipe Scraper 🍅
 
 Tired of scrolling through endless backstories about someone's grandmother's second cousin's trip to Italy before getting to the actual recipe? Recipe Scraper is a Chrome/Edge extension that cuts through the noise and shows just the recipe.
 
 ## Features
 
 - ✂️ Extracts recipes without the life stories, automatically when you open the popup
-- 📋 Gets the title, description, author, source link, ingredients, numbered instructions, prep/cook/total times, and servings
-- ⚖️ Scale a recipe to Half, Double or Triple, with original and scaled ingredients side by side
+- 📋 Shows a recipe card: title, servings, time and source link, then ingredients and numbered steps
+- ☑️ Tick off ingredients as you cook
+- ⚖️ Scale a recipe to ½×, 2× or 3×, with the original amount shown under each scaled one
 - 📑 Pages with several recipes let you choose which one to use
-- 📎 Copy the result to your clipboard
-- 💾 Save the result as a `.txt` file, named after the recipe
+- 📎 Copy the recipe as plain text, including author, description and prep/cook times
+- 💾 Save it as a `.txt` file in your downloads folder; the popup shows exactly where
+- 🌗 Light and dark themes that follow your system
 - 🔍 Reads Schema.org Recipe markup (JSON-LD), with a fallback for pages without it
 - 🔒 Runs entirely in your browser; nothing is sent to a server
 
@@ -47,7 +49,7 @@ RecipeScraper/
 
 ## Configuration
 
-The extension uses Manifest V3 (`browser-extension/manifest.json`, version 2.1.1):
+The extension uses Manifest V3. The current version number is in `browser-extension/manifest.json`.
 
 | Setting | Value |
 | --- | --- |
