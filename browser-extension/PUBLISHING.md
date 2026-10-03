@@ -15,6 +15,7 @@ Good news! Chrome, Edge, and Vivaldi all use Chromium, so one submission works f
 Before publishing, you need:
 
 #### 1. Screenshots (Required)
+- ✅ Ready: `store-assets/screenshot-light.png` and `store-assets/screenshot-dark.png` (1280x800)
 - **At least 1** screenshot (1280x800 or 640x400 pixels)
 - Show the extension in action
 - Recommendation: Take 2-3 screenshots showing:

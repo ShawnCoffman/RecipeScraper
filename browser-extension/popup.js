@@ -180,7 +180,7 @@ function selectRecipe(index) {
 
   renderScaled();
   showView('recipe');
-  $('recipeTitle').scrollIntoView({ block: 'start' });
+  document.querySelector('main').scrollTop = 0;
 }
 
 function showPicker() {

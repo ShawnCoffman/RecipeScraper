@@ -33,6 +33,7 @@ RecipeScraper/
 ├── package.json                # Dev tooling only (test runner + jsdom); not part of the extension
 ├── test/
 │   └── recipe.test.js          # Tests for extraction, scaling and formatting
+├── store-assets/               # Chrome Web Store screenshots (1280x800, light and dark)
 └── browser-extension/          # The extension (load this folder unpacked)
     ├── manifest.json           # Manifest V3 config
     ├── popup.html              # Popup UI and styles
