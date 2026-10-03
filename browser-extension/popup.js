@@ -1,286 +1,343 @@
-// Popup script
-let currentRecipe = null;
+// Popup script. Extraction, scaling and formatting live in recipe.js.
+const {
+  scaleIngredient, scaleYield, formatRecipe, instructionLines, ingredientList, parseDuration, cleanText
+} = RecipeScraper;
 
-const extractBtn = document.getElementById('extractBtn');
-const copyBtn = document.getElementById('copyBtn');
-const downloadBtn = document.getElementById('downloadBtn');
-const statusDiv = document.getElementById('status');
-const outputDiv = document.getElementById('output');
+let allRecipes = [];
+let recipe = null;           // raw recipe data on screen
+let sourceUrl = null;
+let scale = 1;
+let checked = new Set();     // ingredient indexes ticked off; kept across rescaling
 
-// Show status message
-function showStatus(message, type = 'info') {
-  statusDiv.textContent = message;
-  statusDiv.className = `status ${type}`;
-  statusDiv.style.display = 'block';
-  
-  if (type === 'success' || type === 'info') {
-    setTimeout(() => {
-      statusDiv.style.display = 'none';
-    }, 3000);
+const $ = id => document.getElementById(id);
+const rescanBtn = $('rescanBtn');
+const statusEl = $('status');
+const pickerEl = $('picker');
+const recipeEl = $('recipe');
+const actionsEl = $('actions');
+const toastEl = $('toast');
+const copyBtn = $('copyBtn');
+const downloadBtn = $('downloadBtn');
+const scaleButtons = Array.from(document.querySelectorAll('.scale-btn'));
+
+function el(tag, className, text) {
+  const node = document.createElement(tag);
+  if (className) node.className = className;
+  if (text !== undefined) node.textContent = text;
+  return node;
+}
+
+// ==================== VIEWS ====================
+
+// Exactly one of: status message, recipe picker, recipe card.
+function showView(view) {
+  pickerEl.hidden = view !== 'picker';
+  recipeEl.hidden = view !== 'recipe';
+  actionsEl.hidden = view !== 'recipe';
+  if (view !== 'status') statusEl.textContent = '';
+}
+
+function showStatus(title, body) {
+  showView('status');
+  statusEl.textContent = '';
+  statusEl.appendChild(el('strong', '', title));
+  if (body) statusEl.appendChild(document.createTextNode(body));
+}
+
+let toastTimer = null;
+function toast(message) {
+  clearTimeout(toastTimer);
+  toastEl.textContent = message;
+  toastTimer = setTimeout(() => { toastEl.textContent = ''; }, 4000);
+}
+
+// Errors thrown when the browser won't let the extension run on a page
+// (chrome:// pages, the Web Store, the built-in PDF viewer, etc.)
+function showError(error) {
+  if (/cannot access|extensions gallery|cannot be scripted|missing host permission/i.test(error.message)) {
+    showStatus("Can't read this page", 'Open a recipe on a regular website and try again.');
+  } else {
+    showStatus('Something went wrong', error.message);
   }
 }
 
-// Extract recipe from current tab using on-demand injection
-extractBtn.addEventListener('click', async () => {
-  extractBtn.disabled = true;
-  extractBtn.textContent = 'Extracting...';
-  outputDiv.textContent = '';
-  copyBtn.disabled = true;
-  downloadBtn.disabled = true;
-  currentRecipe = null;
-  
+// ==================== RECIPE CARD ====================
+
+function yieldText(recipeData) {
+  const raw = recipeData.recipeYield;
+  if (raw === undefined || raw === null || raw === '') return null;
+  const text = scale === 1
+    ? String(Array.isArray(raw) ? raw[0] : raw)
+    : scaleYield(raw, scale);
+  return /^[\d\s.½¼¾⅓⅔⅛⅜⅝⅞-]+$/.test(text) ? `Serves ${text.trim()}` : cleanText(text);
+}
+
+function renderMeta() {
+  const meta = $('recipeMeta');
+  meta.textContent = '';
+  const parts = [];
+
+  const servings = yieldText(recipe);
+  if (servings) parts.push(servings);
+
+  const time = recipe.totalTime || recipe.cookTime;
+  if (time) parts.push(parseDuration(time));
+
+  parts.forEach((part, i) => {
+    if (i > 0) meta.appendChild(document.createTextNode(' · '));
+    meta.appendChild(document.createTextNode(part));
+  });
+
+  if (sourceUrl) {
+    try {
+      const link = el('a', '', new URL(sourceUrl).hostname.replace(/^www\./, ''));
+      link.href = sourceUrl;
+      link.target = '_blank';
+      link.rel = 'noopener';
+      if (parts.length > 0) meta.appendChild(document.createTextNode(' · '));
+      meta.appendChild(link);
+    } catch (e) {
+      // Not a parseable URL; leave the source out
+    }
+  }
+}
+
+function renderIngredients() {
+  const list = $('ingredients');
+  list.textContent = '';
+
+  ingredientList(recipe).forEach((text, i) => {
+    const item = scaleIngredient(text, scale);
+    const li = el('li');
+    if (checked.has(i)) li.classList.add('done');
+
+    const label = el('label');
+    const box = el('input');
+    box.type = 'checkbox';
+    box.checked = checked.has(i);
+    box.addEventListener('change', () => {
+      if (box.checked) checked.add(i); else checked.delete(i);
+      li.classList.toggle('done', box.checked);
+    });
+
+    const body = el('span');
+    body.appendChild(el('span', 'ingredient-text', scale === 1 ? text : item.scaled));
+    if (scale !== 1 && item.changed) body.appendChild(el('span', 'was', `was ${item.original}`));
+    if (scale !== 1 && item.warning) body.appendChild(el('span', 'note', item.warning));
+
+    label.append(box, body);
+    li.appendChild(label);
+    list.appendChild(li);
+  });
+}
+
+// Steps are numbered straight through, even across section headings.
+function renderSteps() {
+  const container = $('steps');
+  container.textContent = '';
+  const lines = instructionLines(recipe.recipeInstructions);
+  $('stepsSection').hidden = lines.length === 0;
+  $('stepsHint').hidden = scale === 1;
+
+  let list = null;
+  let stepNum = 1;
+  lines.forEach(line => {
+    if (line.heading) {
+      container.appendChild(el('h3', '', line.heading));
+      list = null;
+    } else {
+      if (!list) {
+        list = el('ol', 'steps');
+        list.start = stepNum;
+        container.appendChild(list);
+      }
+      list.appendChild(el('li', '', line.step));
+      stepNum++;
+    }
+  });
+}
+
+function renderScaled() {
+  scaleButtons.forEach(btn => {
+    btn.setAttribute('aria-pressed', String(parseFloat(btn.dataset.scale) === scale));
+  });
+  renderMeta();
+  renderIngredients();
+  renderSteps();
+}
+
+function selectRecipe(index) {
+  recipe = allRecipes[index];
+  scale = 1;
+  checked = new Set();
+  toastEl.textContent = '';
+  $('saved').hidden = true;
+
+  $('recipeTitle').textContent = recipe.name ? cleanText(String(recipe.name)) : 'Untitled recipe';
+  const others = $('otherRecipesBtn');
+  others.hidden = allRecipes.length < 2;
+  others.textContent = `${allRecipes.length} recipes on this page`;
+
+  renderScaled();
+  showView('recipe');
+  $('recipeTitle').scrollIntoView({ block: 'start' });
+}
+
+function showPicker() {
+  const list = $('pickerList');
+  list.textContent = '';
+  $('pickerTitle').textContent = `${allRecipes.length} recipes on this page`;
+  allRecipes.forEach((r, index) => {
+    const button = el('button', '', r.name ? cleanText(String(r.name)) : `Recipe ${index + 1}`);
+    button.addEventListener('click', () => selectRecipe(index));
+    list.appendChild(button);
+  });
+  showView('picker');
+  list.firstChild.focus();
+}
+
+$('otherRecipesBtn').addEventListener('click', showPicker);
+
+scaleButtons.forEach((btn, index) => {
+  btn.addEventListener('click', () => {
+    scale = parseFloat(btn.dataset.scale);
+    renderScaled();
+  });
+
+  btn.addEventListener('keydown', (e) => {
+    const target = {
+      ArrowLeft: scaleButtons[index - 1],
+      ArrowRight: scaleButtons[index + 1],
+      Home: scaleButtons[0],
+      End: scaleButtons[scaleButtons.length - 1]
+    }[e.key];
+    if (target) {
+      e.preventDefault();
+      target.focus();
+    }
+  });
+});
+
+// ==================== EXTRACTION ====================
+
+async function extract() {
+  rescanBtn.disabled = true;
+  showStatus('Reading this page…');
+  allRecipes = [];
+  recipe = null;
+  sourceUrl = null;
+
   try {
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-    
-    // Inject the extraction function into the current tab
-    const results = await chrome.scripting.executeScript({
-      target: { tabId: tab.id },
-      func: extractRecipeFromPage
+    const target = { tabId: tab.id };
+
+    // The extension only touches the page you're on, and only when you ask.
+    await chrome.scripting.executeScript({ target, files: ['recipe.js'] });
+    const [{ result }] = await chrome.scripting.executeScript({
+      target,
+      func: () => globalThis.RecipeScraper.extractRecipes(document)
     });
-    
-    extractBtn.disabled = false;
-    extractBtn.textContent = 'Extract Recipe';
-    
-    const result = results[0].result;
-    
+
     if (result && result.success) {
-      currentRecipe = result.recipe;
-      outputDiv.textContent = result.recipe;
-      copyBtn.disabled = false;
-      downloadBtn.disabled = false;
-      showStatus('Recipe extracted successfully!', 'success');
+      allRecipes = result.recipes;
+      sourceUrl = result.url;
+      if (allRecipes.length > 1) showPicker(); else selectRecipe(0);
+    } else if (result && result.noRecipe) {
+      showStatus('No recipe on this page', 'Open a single recipe, not a search or category page.');
     } else {
-      showStatus(result?.error || 'No recipe found on this page', 'error');
+      showStatus("Couldn't read a recipe here", result?.error);
     }
   } catch (error) {
-    extractBtn.disabled = false;
-    extractBtn.textContent = 'Extract Recipe';
-    showStatus('Error: ' + error.message, 'error');
-  }
-});
-
-// This function gets injected into the page
-function extractRecipeFromPage() {
-  // All extraction logic runs in the page context
-  
-  function isRecipeSchema(data) {
-    if (!data || typeof data !== 'object') return false;
-    const type = data['@type'];
-    if (Array.isArray(type)) {
-      return type.includes('Recipe');
-    }
-    return type === 'Recipe';
-  }
-
-  function parseDuration(duration) {
-    if (!duration || typeof duration !== 'string' || !duration.startsWith('P')) {
-      return duration;
-    }
-    let str = duration.substring(1);
-    let days = 0, hours = 0, minutes = 0, seconds = 0;
-    const parts = str.split('T');
-    if (parts[0]) {
-      const dayMatch = parts[0].match(/(\d+)D/);
-      if (dayMatch) days = parseInt(dayMatch[1]);
-    }
-    if (parts[1]) {
-      const hourMatch = parts[1].match(/(\d+)H/);
-      const minMatch = parts[1].match(/(\d+)M/);
-      const secMatch = parts[1].match(/(\d+)S/);
-      if (hourMatch) hours = parseInt(hourMatch[1]);
-      if (minMatch) minutes = parseInt(minMatch[1]);
-      if (secMatch) seconds = parseInt(secMatch[1]);
-    }
-    const result = [];
-    if (days > 0) result.push(`${days} day${days !== 1 ? 's' : ''}`);
-    if (hours > 0) result.push(`${hours} hour${hours !== 1 ? 's' : ''}`);
-    if (minutes > 0) result.push(`${minutes} minute${minutes !== 1 ? 's' : ''}`);
-    if (seconds > 0) result.push(`${seconds} second${seconds !== 1 ? 's' : ''}`);
-    return result.length > 0 ? result.join(' ') : duration;
-  }
-
-  function cleanText(text) {
-    if (!text || typeof text !== 'string') return text;
-    const textarea = document.createElement('textarea');
-    textarea.innerHTML = text;
-    return textarea.value;
-  }
-
-  function extractRecipeSchema() {
-    const scripts = document.querySelectorAll('script[type="application/ld+json"]');
-    for (const script of scripts) {
-      try {
-        const data = JSON.parse(script.textContent);
-        if (data['@graph']) {
-          for (const item of data['@graph']) {
-            if (isRecipeSchema(item)) return item;
-          }
-        } else if (Array.isArray(data)) {
-          for (const item of data) {
-            if (isRecipeSchema(item)) return item;
-          }
-        } else if (isRecipeSchema(data)) {
-          return data;
-        }
-      } catch (e) {
-        continue;
-      }
-    }
-    return null;
-  }
-
-  function extractRecipeFallback() {
-    const recipe = {};
-    const title = document.querySelector('h1');
-    if (title) recipe.name = title.textContent.trim();
-    
-    const ingredientsSection = document.querySelector('[class*="ingredient" i], [class*="ingredients" i]');
-    if (ingredientsSection) {
-      const ingredients = [];
-      ingredientsSection.querySelectorAll('li').forEach(li => {
-        const text = li.textContent.trim();
-        if (text) ingredients.push(text);
-      });
-      if (ingredients.length > 0) recipe.recipeIngredient = ingredients;
-    }
-    
-    const instructionsSection = document.querySelector('[class*="instruction" i], [class*="directions" i], [class*="step" i]');
-    if (instructionsSection) {
-      const instructions = [];
-      instructionsSection.querySelectorAll('li, p').forEach(item => {
-        const text = item.textContent.trim();
-        if (text && text.length > 10) instructions.push(text);
-      });
-      if (instructions.length > 0) recipe.recipeInstructions = instructions;
-    }
-    return Object.keys(recipe).length > 0 ? recipe : null;
-  }
-
-  function formatRecipe(recipeData) {
-    if (!recipeData) return null;
-    let output = [];
-    output.push('='.repeat(80));
-    const name = cleanText(recipeData.name) || 'Unknown Recipe';
-    output.push(`RECIPE: ${name}`);
-    output.push('='.repeat(80));
-    if (recipeData.description) {
-      output.push('');
-      output.push(cleanText(recipeData.description));
-      output.push('');
-    }
-    if (recipeData.prepTime) output.push(`Prep Time: ${parseDuration(recipeData.prepTime)}`);
-    if (recipeData.cookTime) output.push(`Cook Time: ${parseDuration(recipeData.cookTime)}`);
-    if (recipeData.totalTime) output.push(`Total Time: ${parseDuration(recipeData.totalTime)}`);
-    if (recipeData.recipeYield) {
-      let yieldInfo = recipeData.recipeYield;
-      if (Array.isArray(yieldInfo)) yieldInfo = yieldInfo[0];
-      output.push(`Servings: ${yieldInfo}`);
-    }
-    output.push('');
-    output.push('-'.repeat(80));
-    output.push('INGREDIENTS:');
-    output.push('-'.repeat(80));
-    const ingredients = recipeData.recipeIngredient || [];
-    ingredients.forEach((ingredient, i) => {
-      output.push(`${i + 1}. ${cleanText(ingredient)}`);
-    });
-    output.push('');
-    output.push('-'.repeat(80));
-    output.push('INSTRUCTIONS:');
-    output.push('-'.repeat(80));
-    const instructions = recipeData.recipeInstructions || [];
-    let stepNum = 1;
-    if (Array.isArray(instructions)) {
-      instructions.forEach(instruction => {
-        if (typeof instruction === 'object' && instruction !== null) {
-          if (instruction['@type'] === 'HowToSection') {
-            const sectionName = instruction.name || '';
-            if (sectionName) {
-              output.push('');
-              output.push(`${cleanText(sectionName)}:`);
-            }
-            const steps = instruction.itemListElement || [];
-            steps.forEach(step => {
-              const text = step.text || step.name || '';
-              if (text) {
-                output.push(`${stepNum}. ${cleanText(text)}`);
-                stepNum++;
-              }
-            });
-          } else {
-            const text = instruction.text || instruction.name || '';
-            if (text) {
-              output.push(`${stepNum}. ${cleanText(text)}`);
-              stepNum++;
-            }
-          }
-        } else {
-          output.push(`${stepNum}. ${cleanText(instruction)}`);
-          stepNum++;
-        }
-      });
-    } else if (typeof instructions === 'string') {
-      output.push(cleanText(instructions));
-    }
-    output.push('');
-    output.push('='.repeat(80));
-    return output.join('\n');
-  }
-
-  // Main extraction logic
-  let recipeData = extractRecipeSchema();
-  if (!recipeData) {
-    recipeData = extractRecipeFallback();
-  }
-  if (recipeData) {
-    const formatted = formatRecipe(recipeData);
-    return { success: true, recipe: formatted, data: recipeData };
-  } else {
-    return { success: false, error: 'No recipe found on this page' };
+    showError(error);
+  } finally {
+    rescanBtn.disabled = false;
   }
 }
 
-// Copy recipe to clipboard
+rescanBtn.addEventListener('click', extract);
+
+// ==================== COPY / DOWNLOAD ====================
+
+// Plain-text version of what's on screen, for Copy and Save
+function recipeText() {
+  return formatRecipe(recipe, { scale, sourceUrl });
+}
+
+let copyTimer = null;
 copyBtn.addEventListener('click', async () => {
-  if (!currentRecipe) return;
-  
+  if (!recipe) return;
   try {
-    await navigator.clipboard.writeText(currentRecipe);
-    showStatus('Recipe copied to clipboard!', 'success');
+    await navigator.clipboard.writeText(recipeText());
+    copyBtn.textContent = 'Copied';
+    clearTimeout(copyTimer);
+    copyTimer = setTimeout(() => { copyBtn.textContent = 'Copy'; }, 1500);
   } catch (error) {
-    showStatus('Failed to copy to clipboard', 'error');
+    toast("Couldn't copy to the clipboard. Try again.");
   }
 });
 
-// Download recipe as text file
-downloadBtn.addEventListener('click', () => {
-  if (!currentRecipe) return;
-  
-  // Get recipe name for filename
-  const firstLine = currentRecipe.split('\n').find(line => line.startsWith('RECIPE:'));
-  let filename = 'recipe.txt';
-  
-  if (firstLine) {
-    const recipeName = firstLine.replace('RECIPE:', '').trim();
-    filename = recipeName.toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-+|-+$/g, '') + '.txt';
+downloadBtn.addEventListener('click', async () => {
+  if (!recipe) return;
+
+  const slug = (recipe.name ? cleanText(String(recipe.name)) : '').toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+  const filename = (slug || 'recipe') + '.txt';
+
+  // A data: URL carries the text itself, so nothing has to outlive the popup.
+  // saveAs: false skips the Save As dialog (which belongs to the popup and is
+  // cancelled if the popup closes) and saves straight to the downloads folder.
+  const url = 'data:text/plain;charset=utf-8,' + encodeURIComponent(recipeText());
+
+  savedEl.hidden = true;
+  downloadBtn.disabled = true;
+  downloadBtn.textContent = 'Saving…';
+  try {
+    const id = await chrome.downloads.download({ url, filename, saveAs: false });
+    const item = await finishedDownload(id);
+    savedId = id;
+    $('savedPath').textContent = item.filename;
+    savedEl.hidden = false;
+  } catch (error) {
+    toast(`Couldn't save the file. ${error.message}`);
+  } finally {
+    downloadBtn.disabled = false;
+    downloadBtn.textContent = 'Save .txt';
   }
-  
-  const blob = new Blob([currentRecipe], { type: 'text/plain' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-  
-  showStatus('Recipe downloaded!', 'success');
 });
 
-// Auto-extract on popup open
-window.addEventListener('load', () => {
-  showStatus('Click "Extract Recipe" to get started', 'info');
+// Resolves with the DownloadItem once Chrome has written the file, so we can
+// show its real path (Chrome may add " (1)" if the name is taken).
+function finishedDownload(id) {
+  return new Promise((resolve, reject) => {
+    let timer = null;
+
+    async function check() {
+      const [item] = await chrome.downloads.search({ id });
+      if (!item || item.state === 'in_progress') return;
+      chrome.downloads.onChanged.removeListener(onChanged);
+      clearTimeout(timer);
+      if (item.state === 'complete') resolve(item);
+      else reject(new Error(item.error ? `(${item.error})` : 'The download was cancelled.'));
+    }
+
+    function onChanged(delta) {
+      if (delta.id === id && delta.state) check();
+    }
+
+    chrome.downloads.onChanged.addListener(onChanged);
+    timer = setTimeout(() => {
+      chrome.downloads.onChanged.removeListener(onChanged);
+      reject(new Error('It is taking too long. Check your downloads.'));
+    }, 10000);
+    check(); // it may already be done
+  });
+}
+
+let savedId = null;
+const savedEl = $('saved');
+$('showFileBtn').addEventListener('click', () => {
+  if (savedId !== null) chrome.downloads.show(savedId);
 });
+
+extract();

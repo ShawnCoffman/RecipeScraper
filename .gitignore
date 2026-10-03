@@ -1,0 +1,6 @@
+node_modules/
+*.zip
+
+# Extension signing artifacts - never commit the private key
+*.pem
+*.crx

@@ -41,18 +41,18 @@ Before publishing, you need:
 
 #### Step 2: Prepare Your Extension Package
 
-1. **Zip your extension folder**:
-   ```powershell
-   Compress-Archive -Path browser-extension\* -DestinationPath recipe-scraper-extension.zip
-   ```
+1. **Run the tests** from the repo root: `npm test`
 
-2. **Make sure these files are included**:
-   - manifest.json
-   - popup.html
-   - popup.js
-   - content.js
-   - icon16.png, icon48.png, icon128.png
-   - README.md (optional, for your reference)
+2. **Zip only the files the extension needs** (from the repo root). Docs and tests should not ship, and neither should the signing key (`*.pem`):
+   ```powershell
+   Compress-Archive -DestinationPath recipe-scraper-extension.zip -Path `
+     browser-extension\manifest.json, browser-extension\popup.html, browser-extension\popup.js, `
+     browser-extension\recipe.js, browser-extension\icon16.png, browser-extension\icon48.png, `
+     browser-extension\icon128.png
+   ```
+   The files must sit at the top level of the zip (not inside a folder); `Compress-Archive` with a list of files does this. The store adds the `key` and `update_url` fields to the manifest itself, so don't add them to the repo's `manifest.json`.
+
+3. **Keep permissions unchanged where possible.** Adding a permission (or host access) makes Chrome disable the extension for existing users until they re-approve it. The extension currently uses `activeTab`, `scripting` and `downloads`.
 
 #### Step 3: Upload to Chrome Web Store
 
@@ -72,8 +72,9 @@ Tired of scrolling through endless blog posts to find the recipe? Recipe Scraper
 what you need - ingredients, instructions, and cooking times - no ads, no life stories, just the recipe!
 
 Features:
-• One-click recipe extraction
+• Automatic recipe extraction
 • Clean, formatted output
+• Scale a recipe to half, double or triple
 • Copy to clipboard
 • Download as text file
 • Works on most recipe sites
@@ -82,12 +83,12 @@ Features:
 
 How to Use:
 1. Navigate to any recipe website
-2. Click the Recipe Scraper icon
-3. Click "Extract Recipe"
+2. Click the Recipe Scraper icon - the recipe is extracted automatically
+3. Optionally pick Half, Double or Triple
 4. Copy or download - done!
 
-Supports sites with Schema.org markup including AllRecipes, Food Network, Bon Appétit, 
-Serious Eats, and most food blogs.
+Works on sites that publish Schema.org recipe markup (most major recipe sites and food blogs),
+with a fallback for pages that don't.
 
 Privacy: All processing happens locally in your browser. No data is collected or sent anywhere.
 ```
@@ -133,15 +134,6 @@ If you want a dedicated Edge listing:
 
 **Benefit:** Direct presence in Edge Add-ons store, but not required since Edge users can install from Chrome Web Store.
 
-## Firefox Add-ons (Future)
-
-For Firefox, you'll need to make small changes to `manifest.json`:
-- Change `manifest_version` to 2 (Firefox doesn't fully support v3 yet)
-- Adjust some permission declarations
-- Submit to [addons.mozilla.org](https://addons.mozilla.org)
-
-Let me know if you want help with the Firefox version!
-
 ## Tips for Success
 
 ### Good Screenshots
@@ -165,18 +157,11 @@ Let me know if you want help with the Firefox version!
 
 When you make improvements:
 
-1. Update the `version` in manifest.json (e.g., 1.0 → 1.1)
+1. Update the `version` in manifest.json (e.g., 2.0.1 → 2.0.2)
 2. Create a new zip file
 3. Upload to the Developer Dashboard
 4. Add release notes describing changes
 5. Submit for review
-
-## Monetization (Optional)
-
-Your extension is currently free, but if you want to monetize later:
-- Keep the extension free with a "Buy Me a Coffee" link
-- Add premium features with in-app purchases
-- Create a companion service
 
 ## Support & Maintenance
 
@@ -185,11 +170,3 @@ Consider adding:
 - A GitHub repository for issues/feature requests
 - A simple website with FAQs
 
----
-
-**Ready to publish?** Just need to:
-1. Pay the $5 Chrome Web Store fee
-2. Take 2-3 screenshots
-3. Zip and upload!
-
-Good luck! 🚀

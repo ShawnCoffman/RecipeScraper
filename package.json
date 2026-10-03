@@ -1,0 +1,11 @@
+{
+  "name": "recipe-scraper",
+  "private": true,
+  "description": "Dev tooling for the Recipe Scraper browser extension (tests only; not part of the extension package)",
+  "scripts": {
+    "test": "node --test \"test/*.test.js\""
+  },
+  "devDependencies": {
+    "jsdom": "^26.0.0"
+  }
+}
