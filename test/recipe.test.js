@@ -164,6 +164,40 @@ describe('HTML fallback', () => {
     assert.equal(result.noRecipe, true);
   });
 
+  // Layout used by recipeland.com: div rows, with metric amounts hidden behind a toggle.
+  const row = (us, metric, unit, name) => `
+    <div class="ingredient-row d-flex" role="row">
+      <div class="amount-measure"><span class="ir-us">${us}</span><span class="ir-metric d-none">${metric}</span></div>
+      <div class="ingredient"><span class="ir-us">${unit}</span> <a href="#">${name}</a> <span>*</span></div>
+    </div>`;
+  const rows = `
+    <div class="ingredients-body" role="rowgroup">
+      ${row('1', '237', 'CUP', 'RICE FLOUR')}
+      ${row('¾', '177', 'CUP', 'SUGAR')}
+      ${row('1', '5', 'TEASPOON', 'CINNAMON')}
+    </div>`;
+
+  test('reads ingredients laid out as div rows, skipping hidden text', () => {
+    const doc = pageWith(`<h1>Cookies</h1>${rows}
+      <ol class="directions"><li>Mix everything together.</li><li>Bake for ten minutes.</li></ol>`);
+    assert.deepEqual(extractRecipes(doc).recipes[0].recipeIngredient,
+      ['1 cup rice flour', '¾ cup sugar', '1 teaspoon cinnamon']);
+  });
+
+  test('fills in amounts missing from JSON-LD using the page', () => {
+    const schema = { ...pancakes, recipeIngredient: ['rice flour', 'sugar', 'cinnamon'] };
+    const doc = pageWith(rows, jsonLd(schema));
+    const [recipe] = extractRecipes(doc).recipes;
+    assert.deepEqual(recipe.recipeIngredient, ['1 cup rice flour', '¾ cup sugar', '1 teaspoon cinnamon']);
+    assert.equal(recipe.name, schema.name);
+  });
+
+  test('keeps JSON-LD ingredients when the page list does not line up', () => {
+    const schema = { ...pancakes, recipeIngredient: ['rice flour', 'sugar', 'cinnamon', 'salt'] };
+    const doc = pageWith(rows, jsonLd(schema));
+    assert.deepEqual(extractRecipes(doc).recipes[0].recipeIngredient, schema.recipeIngredient);
+  });
+
   test('reports no recipe when only a small filter-style list is present', () => {
     const doc = pageWith('<h1>Shop</h1><ul class="ingredient-filter"><li>Gluten free</li></ul>');
     assert.equal(extractRecipes(doc).success, false);

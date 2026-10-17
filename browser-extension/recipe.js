@@ -138,17 +138,72 @@
     return candidates.filter(el => !candidates.some(other => other !== el && el.contains(other)));
   }
 
-  function bestList(sections, selector, minLength) {
+  const HIDDEN_CLASS = /(^|\s)(d-none|hidden|hide|invisible|sr-only|visually-hidden|screen-reader-text)(\s|$)/i;
+
+  function isHidden(el) {
+    return el.hasAttribute('hidden') ||
+      el.getAttribute('aria-hidden') === 'true' ||
+      /display\s*:\s*none|visibility\s*:\s*hidden/i.test(el.getAttribute('style') || '') ||
+      HIDDEN_CLASS.test(el.getAttribute('class') || '');
+  }
+
+  // An element's text without hidden parts (e.g. a metric amount shown only on toggle).
+  function visibleText(el) {
+    const copy = el.cloneNode(true);
+    copy.querySelectorAll('*').forEach(child => {
+      if (isHidden(child)) child.remove();
+    });
+    copy.querySelectorAll('br').forEach(br => br.replaceWith(' '));
+    return collapseWhitespace(copy.textContent);
+  }
+
+  // Tidy an ingredient line read from the page: drop footnote asterisks and
+  // lowercase lines printed in capitals ("1 CUP RICE FLOUR").
+  function tidyIngredient(text) {
+    text = text.replace(/\s*\*+$/, '');
+    const upper = (text.match(/[A-Z]/g) || []).length;
+    const lower = (text.match(/[a-z]/g) || []).length;
+    return upper > lower ? text.toLowerCase() : text;
+  }
+
+  function bestList(sections, selector, minLength, toText = visibleText) {
     return sections
       .map(section => Array.from(section.querySelectorAll(selector))
-        .map(el => collapseWhitespace(el.textContent))
+        .map(toText)
         .filter(text => text.length >= minLength))
       .reduce((best, current) => (current.length > best.length ? current : best), []);
   }
 
+  // Ingredients laid out as repeated sibling elements instead of a list, e.g.
+  // <div class="ingredient-row">…</div> × 10. Groups of 3+ siblings with the same class.
+  function ingredientRows(doc) {
+    const groups = new Map();
+    doc.querySelectorAll('[class]').forEach(el => {
+      const cls = collapseWhitespace(el.getAttribute('class') || '');
+      if (!INGREDIENT_CLASS.test(cls) || !el.parentNode) return;
+      const key = el.parentNode;
+      if (!groups.has(key)) groups.set(key, new Map());
+      const byClass = groups.get(key);
+      if (!byClass.has(cls)) byClass.set(cls, []);
+      byClass.get(cls).push(el);
+    });
+    let best = [];
+    groups.forEach(byClass => byClass.forEach(rows => {
+      const texts = rows.filter(el => !isHidden(el)).map(visibleText).filter(Boolean);
+      if (texts.length >= 3 && texts.length > best.length) best = texts;
+    }));
+    return best;
+  }
+
+  function extractIngredientsFromPage(doc) {
+    const fromLists = bestList(findSections(doc, INGREDIENT_CLASS), 'li', 1);
+    const fromRows = ingredientRows(doc);
+    return (fromRows.length > fromLists.length ? fromRows : fromLists).map(tidyIngredient);
+  }
+
   // A page only counts as a recipe if it has a real ingredient list and some instructions.
   function extractRecipeFallback(doc) {
-    const ingredients = bestList(findSections(doc, INGREDIENT_CLASS), 'li', 1);
+    const ingredients = extractIngredientsFromPage(doc);
     const instructions = bestList(findSections(doc, INSTRUCTION_CLASS), 'li, p', 11);
     if (ingredients.length < 3 || instructions.length < 2) return null;
 
@@ -158,11 +213,29 @@
     return recipe;
   }
 
+  const hasQuantity = text => readNumber(String(text).trim()) !== null;
+
+  // Some sites leave amounts out of their JSON-LD ("baking soda") but show them on the
+  // page ("1 tsp baking soda"). If the page has the same number of ingredients and
+  // more of them have amounts, use the page's lines.
+  function fillMissingAmounts(recipe, doc) {
+    const schemaList = Array.isArray(recipe.recipeIngredient) ? recipe.recipeIngredient : [];
+    const schemaCount = schemaList.filter(hasQuantity).length;
+    if (schemaList.length < 3 || schemaCount > schemaList.length / 2) return recipe;
+
+    const pageList = extractIngredientsFromPage(doc);
+    if (pageList.length !== schemaList.length) return recipe;
+    if (pageList.filter(hasQuantity).length <= schemaCount) return recipe;
+    return { ...recipe, recipeIngredient: pageList };
+  }
+
   // Raw recipe data only; formatting and scaling happen in the popup.
   function extractRecipes(doc) {
     doc = doc || root.document;
     let recipes = extractRecipeSchema(doc);
-    if (recipes.length === 0) {
+    if (recipes.length === 1) {
+      recipes = [fillMissingAmounts(recipes[0], doc)];
+    } else if (recipes.length === 0) {
       const fallback = extractRecipeFallback(doc);
       if (fallback) recipes = [fallback];
     }
