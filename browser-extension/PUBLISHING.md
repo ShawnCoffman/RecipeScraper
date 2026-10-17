@@ -1,46 +1,34 @@
-# Publishing Your Browser Extension
+# Publishing the Extension
 
 ## Chrome Web Store (Chrome, Edge, Vivaldi)
 
-Good news! Chrome, Edge, and Vivaldi all use Chromium, so one submission works for all three.
+Chrome, Edge and Vivaldi are all built on Chromium, so a single Chrome Web Store listing covers all three.
 
 ### Prerequisites
 
-1. **Google Account** - You'll need one for the Chrome Web Store
-2. **One-time Developer Fee** - $5 USD registration fee
-3. **Store Assets** - Prepare promotional images
+1. **A Google account** for the Chrome Web Store.
+2. **The one-time developer fee** of $5 USD.
+3. **Store assets**, listed below.
 
-### Required Assets
+### Store assets
 
-Before publishing, you need:
+| Asset | Size | Required | Status |
+| --- | --- | --- | --- |
+| Screenshots | 1280x800 or 640x400, at least one | Yes | ✅ `store-assets/screenshot-light.png` and `screenshot-dark.png` |
+| Extension icon | 16, 48 and 128 px | Yes | ✅ `icon16.png`, `icon48.png`, `icon128.png` (exported from `icon.svg` and `icon16.svg`) |
+| Small promo tile | 440x280 | No | Not made |
+| Marquee | 1400x560 | No | Not made |
 
-#### 1. Screenshots (Required)
-- ✅ Ready: `store-assets/screenshot-light.png` and `store-assets/screenshot-dark.png` (1280x800)
-- **At least 1** screenshot (1280x800 or 640x400 pixels)
-- Show the extension in action
-- Recommendation: Take 2-3 screenshots showing:
-  - The extension popup with a recipe extracted
-  - The extension icon in the toolbar
-  - A before/after comparison
+### Publishing steps
 
-#### 2. Promotional Images (Optional but Recommended)
-- **Small tile**: 440x280 pixels
-- **Marquee**: 1400x560 pixels
-- These appear in the Chrome Web Store listing
-
-#### 3. Extension Icon
-- ✅ Already done! (icon16.png, icon48.png, icon128.png, exported from icon.svg and icon16.svg)
-
-### Publishing Steps
-
-#### Step 1: Register as a Developer
+#### Step 1: Register as a developer
 
 1. Go to [Chrome Web Store Developer Dashboard](https://chrome.google.com/webstore/devconsole/)
 2. Sign in with your Google account
 3. Pay the $5 one-time registration fee
 4. Accept the terms of service
 
-#### Step 2: Prepare Your Extension Package
+#### Step 2: Build the package
 
 1. **Run the tests** from the repo root: `npm test`
 
@@ -55,14 +43,14 @@ Before publishing, you need:
 
 3. **Keep permissions unchanged where possible.** Adding a permission (or host access) makes Chrome disable the extension for existing users until they re-approve it. The extension currently uses `activeTab`, `scripting` and `downloads`.
 
-#### Step 3: Upload to Chrome Web Store
+#### Step 3: Upload to the Chrome Web Store
 
 1. Go to the [Developer Dashboard](https://chrome.google.com/webstore/devconsole/)
-2. Click **"New Item"**
-3. Upload your `recipe-scraper-extension.zip`
+2. Click **New item**
+3. Upload `recipe-scraper-extension.zip`
 4. Fill out the store listing:
 
-**Store Listing Information:**
+**Store listing text:**
 
 ```
 Name: Recipe Scraper
@@ -106,7 +94,7 @@ Privacy: All processing happens locally in your browser. No data is collected or
 6. Set pricing to **Free**
 7. Select regions (Worldwide recommended)
 
-#### Privacy Practices Tab
+#### Privacy practices tab
 
 The dashboard won't let you submit until this tab is filled in, and vague answers are a common reason for rejection.
 
@@ -134,65 +122,57 @@ Recipe Scraper does not collect, store, or transmit any user data. All recipe ex
 happens locally in your browser. No analytics, no tracking, no data collection of any kind.
 ```
 
-#### Step 4: Submit for Review
+#### Step 4: Submit for review
 
 1. Click **"Submit for Review"**
 2. Review typically takes **1-3 days**
 3. You'll receive an email when it's approved or if changes are needed
 
-### After Approval
+### After approval
 
 Once approved, your extension will be available at:
-- **Chrome Web Store**: `chromewebstore.google.com/detail/recipe-scraper/your-extension-id`
-- **Edge Add-ons** (optional): Can also submit directly to Microsoft Edge Add-ons
-- **Vivaldi**: Uses Chrome Web Store automatically
+- **Chrome Web Store:** `chromewebstore.google.com/detail/recipe-scraper/<extension-id>`
+- **Edge:** Edge users can install from the Chrome Web Store, or you can submit a separate listing to Edge Add-ons (below).
+- **Vivaldi:** installs from the Chrome Web Store.
 
-Users can then install with one click!
+## Microsoft Edge Add-ons (optional)
 
-## Microsoft Edge Add-ons (Optional)
+Edge users can already install from the Chrome Web Store, but a separate listing makes the extension show up in Edge's own store:
 
-If you want a dedicated Edge listing:
+1. Sign in to [Microsoft Partner Center](https://partner.microsoft.com/dashboard/microsoftedge/public/login). Registration is free.
+2. Upload the same zip.
+3. Fill in the listing, reusing the Chrome text above.
+4. Submit for review.
 
-1. Go to [Microsoft Partner Center](https://partner.microsoft.com/dashboard/microsoftedge/public/login)
-2. Register (free, no fee unlike Chrome)
-3. Upload the same extension package
-4. Fill out similar listing information
-5. Submit for review
+## Tips
 
-**Benefit:** Direct presence in Edge Add-ons store, but not required since Edge users can install from Chrome Web Store.
+### Screenshots
 
-## Tips for Success
+- Use a recipe from a well-known site.
+- Show the clean recipe card next to the cluttered original page.
+- Feature scaling with the original amounts, checked-off ingredients, and Copy and Save .txt.
+- The popup is 400px wide, so place it on a 1280x800 canvas rather than stretching it. One light and one dark shot works well.
 
-### Good Screenshots
-1. Use the extension on a popular recipe site like AllRecipes
-2. Show the clean recipe card next to the cluttered original page
-3. Highlight key features: scaling with the original amounts, ticked-off ingredients, Copy and Save .txt
-4. The popup is 400px wide, so place it on a 1280x800 canvas rather than stretching it; one light and one dark shot works well
+### Description
 
-### Description Tips
-- Focus on the problem it solves (no more life stories!)
-- Keep it concise and benefit-focused
-- Use bullet points for features
-- Mention popular supported sites
+- Lead with the problem it solves: no more scrolling past life stories.
+- Keep it short and focused on benefits, with features as a bulleted list.
 
-### After Publishing
-- Share on social media
-- Post in relevant subreddits (r/Cooking, r/recipes)
-- Respond to user feedback and reviews
-- Don't ask for or trade positive reviews; the store's policies treat that as rating manipulation
+### After publishing
 
-## Version Updates
+- Share it where home cooks gather, such as r/Cooking and r/recipes.
+- Respond to reviews and feedback.
+- Don't ask for or trade positive reviews. The store treats that as rating manipulation.
 
-When you make improvements:
+## Version updates
 
-1. Update the `version` in manifest.json (e.g., 2.1.1 → 2.1.2)
-2. Create a new zip file
-3. Upload to the Developer Dashboard
-4. Add release notes describing changes
-5. Submit for review
+1. Raise the `version` in `manifest.json` (for example, 2.1.2 → 2.1.3). The store rejects an upload that isn't higher than the live version.
+2. Run `npm test`, then build a new zip as in Step 2.
+3. In the Developer Dashboard, open the existing item and upload the zip on the **Package** tab.
+4. Add release notes describing the changes.
+5. Submit for review.
 
-## Support & Maintenance
+## Support
 
-- Issues and feature requests: [GitHub issues](https://github.com/ShawnCoffman/RecipeScraper/issues), also used as the listing's support URL
-- Consider adding a support email to the listing
-
+- Issues and feature requests go to [GitHub issues](https://github.com/ShawnCoffman/RecipeScraper/issues), which is also the listing's support URL.
+- Consider adding a support email to the listing.
